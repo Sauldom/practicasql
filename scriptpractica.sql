@@ -672,11 +672,65 @@ inner join copia_pelicula cp on cp.id_pelicula =p.id;
 
 select * from alquilar_pelicula ap ;
 
-select ap.id as Id_prestamo, cp.id as Id_copia  ,p.titulo as titulo_libre from alquilar_pelicula ap 
+/*la unica manera que he encontrado es negando la subconsulta positiva
+ * la verdad es que la pista me la dio un compañero porque al principio me quede satisfecho con la siguiente consulta*/
+SELECT count(cp.id) as libres, p.titulo as titulo
+FROM copia_pelicula cp
+inner JOIN pelicula p ON p.id = cp.id_pelicula
+WHERE cp.id NOT IN (
+    SELECT ap.id_copia_pelicula
+    FROM alquilar_pelicula ap
+    WHERE ap.fecha_devolucion IS NULL
+)
+group by p.titulo;
+
+
+
+/*ESTA ES LA CONSULTA ORIGINAL QUE PENSE QUE ERA LA BUENA
+ 
+select count(cp.id) as numero_de_copias  ,p.titulo as titulo_libre from alquilar_pelicula ap 
 inner join copia_pelicula cp on cp.id=ap.id_copia_pelicula
 inner join pelicula p on p.id=cp.id_pelicula
-where fecha_devolucion is not null 
-order by cp.id asc;
+where ap.fecha_devolucion is null 
+group by p.titulo;
+*/
 
-/*estamos aqui*/
+
+
+
+/*pense que con esta consulta me solucionaria pero he tenido que recurrir a otras cosas que no conocia
+ me salen listados todos no los maximos de cada uno no se porque el max aqui no hace lo que yo supongo que tiene que hacer
+
+select max(sec.alquiler) max_alquiler, sec.genero_favorito ,sec.nombre_socio, concat (sec.apellido_1, ' ', sec.apellido_2) apellidos from (
+SELECT s.nombre AS nombre_socio,
+           s.apellido_1,
+           s.apellido_2,
+           g.nombre AS genero_favorito,
+           COUNT(*) AS alquiler
+    FROM socio s
+    INNER JOIN alquilar_pelicula ap ON ap.id_socio = s.id
+    INNER JOIN copia_pelicula cp ON cp.id = ap.id_copia_pelicula
+    INNER JOIN pelicula p ON p.id = cp.id_pelicula
+    INNER JOIN genero g ON g.id = p.id_genero
+    GROUP BY s.nombre, s.apellido_1, s.apellido_2, g.nombre) sec
+   group by sec.nombre_socio, sec.apellido_1, sec.apellido_2, sec.genero_favorito;*/
+
+/*he tenido que usar una  row_number que por lo leido devuelve el numero secuencial de fila
+ * en este caso el primero que al ordenarlo coge la fila que mas tiene que se supone que tambien deberia hacerlo el max*/
+ SELECT genero_favorito,
+       nombre_socio,
+       apellidos
+FROM (
+    SELECT g.nombre as genero_favorito,
+           s.nombre as nombre_socio,
+           CONCAT(s.apellido_1, ' ', s.apellido_2) AS apellidos,
+           ROW_NUMBER() OVER(PARTITION BY s.nombre ORDER BY COUNT(*) DESC) AS rn
+    FROM socio s
+    INNER JOIN alquilar_pelicula ap ON ap.id_socio = s.id
+    INNER JOIN copia_pelicula cp ON cp.id = ap.id_copia_pelicula
+    INNER JOIN pelicula p ON p.id = cp.id_pelicula
+    INNER JOIN genero g ON g.id = p.id_genero
+    GROUP BY s.nombre, s.apellido_1, s.apellido_2, g.nombre
+) ranked
+WHERE rn = 1;
 
