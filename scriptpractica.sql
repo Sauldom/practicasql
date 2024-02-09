@@ -1,87 +1,88 @@
-create SCHEMA videoclub;
+CREATE SCHEMA IF NOT EXISTS videoclub;
 
-set schema 'videoclub';
+SET search_path TO videoclub;
 
-CREATE table if not exists socio(
-	id serial primary key, 
-	dni varchar(50) not NULL,
-	nombre varchar(50) not NULL,
-	apellido_1 varchar(50) not NULL,
-	apellido_2 varchar(50) not NULL,
-	email varchar(50) not NULL,
-	telefono varchar(50) not null,
-	fecha_nacimiento date not NULL
+CREATE TABLE IF NOT EXISTS socio (
+    id SERIAL PRIMARY KEY, 
+    dni VARCHAR(50) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido_1 VARCHAR(50) NOT NULL,
+    apellido_2 VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL,
+    telefono VARCHAR(50) NOT NULL,
+    fecha_nacimiento DATE NOT NULL
 );
 
-create table if not exists direccion(
-	id_socio int  primary key,
-	codigo_postal varchar(5) NULL,
-	numero varchar(5) NULL,
-	piso varchar(5) NULL,
-	letra varchar NULL,
-	calle varchar NULL,
-	ext varchar(50) NULL
+CREATE TABLE IF NOT EXISTS direccion (
+    id_socio INT PRIMARY KEY,
+    codigo_postal VARCHAR(5) NULL,
+    numero VARCHAR(5) NULL,
+    piso VARCHAR(5) NULL,
+    letra VARCHAR NULL,
+    calle VARCHAR NULL,
+    ext VARCHAR(50) NULL
 );
 
-create table if not exists  pelicula (
-	id serial primary key,
-	titulo varchar(80) not NULL,
-	id_genero int not NULL,
-	sinopsis text not NULL,
-	id_director int not NULL
-);
-create table if not exists genero(
-	id serial primary key,
-	nombre varchar(50) not null
+CREATE TABLE IF NOT EXISTS pelicula (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(80) NOT NULL,
+    id_genero INT NOT NULL,
+    sinopsis TEXT NOT NULL,
+    id_director INT NOT NULL
 );
 
-create table if not exists director(
-	id serial primary key,
-	nombre varchar(80) not null
+CREATE TABLE IF NOT EXISTS genero (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
 );
 
-create table if not exists copia_pelicula(
-	id serial primary key,
-	id_pelicula int not null
+CREATE TABLE IF NOT EXISTS director (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL
 );
 
-create table if not exists alquilar_pelicula(
-	id serial primary key,
-	fecha_alquiler date not NULL,
-	fecha_devolucion date null,
-	id_copia_pelicula int null, 
-	id_socio int not null
+CREATE TABLE IF NOT EXISTS copia_pelicula (
+    id SERIAL PRIMARY KEY,
+    id_pelicula INT NOT NULL
 );
 
-alter table direccion 
-	add constraint fk_socio_direccion
-	foreign key (id_socio)
-	references socio(id);
+CREATE TABLE IF NOT EXISTS alquilar_pelicula (
+    id SERIAL PRIMARY KEY,
+    fecha_alquiler DATE NOT NULL,
+    fecha_devolucion DATE NULL,
+    id_copia_pelicula INT NULL, 
+    id_socio INT NOT NULL
+);
 
-alter table alquilar_pelicula 
-	add constraint fk_socio_alquiler
-	foreign key (id_socio)
-	references socio(id);
+ALTER TABLE direccion 
+    ADD CONSTRAINT fk_socio_direccion
+    FOREIGN KEY (id_socio)
+    REFERENCES socio(id);
 
-alter table alquilar_pelicula 
-	add constraint fk_alquiler_copia
-	foreign key (id_copia_pelicula)
-	references copia_pelicula(id);
+ALTER TABLE alquilar_pelicula 
+    ADD CONSTRAINT fk_socio_alquiler
+    FOREIGN KEY (id_socio)
+    REFERENCES socio(id);
 
-alter table copia_pelicula
-	add constraint fk_copia_pelicula
-	foreign key (id_pelicula)
-	references pelicula (id);
+ALTER TABLE alquilar_pelicula 
+    ADD CONSTRAINT fk_alquiler_copia
+    FOREIGN KEY (id_copia_pelicula)
+    REFERENCES copia_pelicula(id);
 
-alter table pelicula 
-	add constraint fk_pelicula_genero
-	foreign key (id_genero)
-	references genero(id);
+ALTER TABLE copia_pelicula
+    ADD CONSTRAINT fk_copia_pelicula
+    FOREIGN KEY (id_pelicula)
+    REFERENCES pelicula(id);
 
-alter table pelicula
-	add constraint fk_pelicula_director
-	foreign key (id_director)
-	references director(id);
+ALTER TABLE pelicula 
+    ADD CONSTRAINT fk_pelicula_genero
+    FOREIGN KEY (id_genero)
+    REFERENCES genero(id);
+
+ALTER TABLE pelicula
+    ADD CONSTRAINT fk_pelicula_director
+    FOREIGN KEY (id_director)
+    REFERENCES director(id);
 
 
 CREATE TABLE tmp_videoclub (
@@ -626,67 +627,136 @@ INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,a
 	 (306,'2024-01-07','6810904Y','Hugo','Torres','Ferrer','hugo.torres.ferrer@gmail.com','649016903','47006','1994-06-05','50','1','Der.','Federico García Lorca','1Der.','La doncella','Thriller','Corea, década de 1930, durante la colonización japonesa. Una joven llamada Sookee es contratada como doncella de una rica mujer japonesa, Hideko, que vive recluida en una gran mansión bajo la influencia de un tirano. Sookee guarda un secreto y con la ayuda de un estafador que se hace pasar por un conde japonés, planea algo para Hideko.','Park Chan-wook','2024-01-07','2024-01-08'),
 	 (308,'2024-01-25','1638778M','Angel','Lorenzo','Caballero','angel.lorenzo.caballero@gmail.com','698073069','47008','2011-07-30','82','1','Izq.','Sol','1Izq.','El bazar de las sorpresas','Comedia','Alfred Kralik es el tímido jefe de vendedores de Matuschek y Compañía, una tienda de Budapest. Todas las mañanas, los empleados esperan juntos la llegada de su jefe, Hugo Matuschek. A pesar de su timidez, Alfred responde al anuncio de un periódico y mantiene un romance por carta. Su jefe decide contratar a una tal Klara Novak en contra de la opinión de Alfred. En el trabajo, Alfred discute constantemente con ella, sin sospechar que es su corresponsal secreta.','Ernst Lubitsch','2024-01-25',NULL);
 
-select * from tmp_videoclub tv ;	
+-- Insertar en la tabla socio
+INSERT INTO socio (dni, nombre, apellido_1, apellido_2, email, telefono, fecha_nacimiento)
+SELECT
+    tv.dni,
+    tv.nombre,
+    tv.apellido_1,
+    tv.apellido_2,
+    tv.email,
+    tv.telefono,
+    CAST(tv.fecha_nacimiento AS DATE)
+FROM
+    tmp_videoclub tv
+GROUP BY
+    tv.dni,
+    tv.nombre,
+    tv.apellido_1,
+    tv.apellido_2,
+    tv.email,
+    tv.telefono,
+    tv.fecha_nacimiento;
 
-insert into socio (dni, nombre, apellido_1, apellido_2,email,telefono,fecha_nacimiento)
-select tv.dni,tv.nombre, tv.apellido_1, tv.apellido_2, tv.email, tv.telefono, cast(tv.fecha_nacimiento as date) from tmp_videoclub tv
-group by tv.dni,tv.nombre, tv.apellido_1, tv.apellido_2, tv.email, tv.telefono, tv.fecha_nacimiento;
+-- Consulta para verificar los datos de la tabla socio
+--SELECT * FROM socio;
 
+-- Insertar en la tabla direccion
+INSERT INTO direccion (id_socio, codigo_postal, numero, piso, letra, calle, ext)
+SELECT
+    s.id,
+    tv.codigo_postal,
+    tv.numero,
+    tv.piso,
+    tv.letra,
+    tv.calle,
+    tv.ext
+FROM
+    tmp_videoclub tv
+INNER JOIN socio s ON s.dni = tv.dni
+GROUP BY
+    s.id,
+    tv.codigo_postal,
+    tv.numero,
+    tv.piso,
+    tv.letra,
+    tv.calle,
+    tv.ext;
 
-select * from socio;
+-- Consulta para verificar los datos de la tabla direccion
+--SELECT * FROM direccion;
 
-insert into direccion (id_socio, codigo_postal, numero,piso, letra, calle, ext )
-select s.id,tv.codigo_postal, tv.numero , tv.piso, tv.letra, tv.calle, tv.ext from tmp_videoclub tv
-inner join socio s on s.dni =tv.dni
-group by s.id,tv.codigo_postal, tv.numero , tv.piso, tv.letra, tv.calle, tv.ext; 
+-- Insertar en la tabla genero
+INSERT INTO genero (nombre)
+SELECT DISTINCT tv.genero FROM tmp_videoclub tv;
 
-select * from direccion;
+-- Insertar en la tabla director
+INSERT INTO director (nombre)
+SELECT DISTINCT tv.director FROM tmp_videoclub tv;
 
-insert into genero (nombre)
-select distinct tv.genero from tmp_videoclub tv ;
+-- Insertar en la tabla pelicula
+INSERT INTO pelicula (titulo, sinopsis, id_genero, id_director)
+SELECT
+    tv.titulo,
+    tv.sinopsis,
+    g.id,
+    d.id
+FROM
+    tmp_videoclub tv
+INNER JOIN genero g ON g.nombre = tv.genero
+INNER JOIN director d ON d.nombre = tv.director
+GROUP BY
+    tv.titulo,
+    tv.sinopsis,
+    g.id,
+    d.id;
 
-insert into director(nombre)
-select distinct tv.director from tmp_videoclub tv ;
+-- Consulta para verificar los datos de la tabla pelicula
+--SELECT * FROM pelicula;
 
+-- Insertar en la tabla copia_pelicula
+INSERT INTO copia_pelicula (id, id_pelicula)
+SELECT
+    tv.id_copia,
+    p.id
+FROM
+    tmp_videoclub tv
+INNER JOIN pelicula p ON p.titulo = tv.titulo
+GROUP BY
+    tv.id_copia,
+    p.id;
 
-insert into pelicula(titulo, sinopsis, id_genero, id_director)
-select tv.titulo, tv.sinopsis, g.id, d.id from tmp_videoclub tv
-inner join genero g on g.nombre = tv.genero  
-inner join director d on d.nombre = tv.director 
-group by tv.titulo, tv.sinopsis, g.id, d.id ; 
+-- Consulta para verificar los datos de la tabla copia_pelicula
+--SELECT * FROM copia_pelicula;
 
-select * from pelicula; 
+-- Insertar en la tabla alquilar_pelicula
+INSERT INTO alquilar_pelicula (fecha_alquiler, fecha_devolucion, id_copia_pelicula, id_socio)
+SELECT DISTINCT
+    tv.fecha_alquiler,
+    tv.fecha_devolucion,
+    tv.id_copia,
+    s.id
+FROM
+    tmp_videoclub tv
+INNER JOIN socio s ON s.dni = tv.dni
+INNER JOIN pelicula p ON p.titulo = tv.titulo
+INNER JOIN copia_pelicula cp ON cp.id_pelicula = p.id;
 
-insert into copia_pelicula (id, id_pelicula)
-select tv.id_copia, p.id from tmp_videoclub tv
-inner join pelicula p on p.titulo = tv.titulo
-group by tv.id_copia, p.id;
+-- Consulta para verificar los datos de la tabla alquilar_pelicula
+--SELECT * FROM alquilar_pelicula;
 
-select * from copia_pelicula cp;
-
-insert into alquilar_pelicula (fecha_alquiler, fecha_devolucion, id_copia_pelicula, id_socio)
-select distinct tv.fecha_alquiler, tv.fecha_devolucion, tv.id_copia , s.id  from tmp_videoclub tv
-inner join socio s on s.dni=tv.dni
-inner join pelicula p on p.titulo =tv.titulo
-inner join copia_pelicula cp on cp.id_pelicula =p.id;
-
-select * from alquilar_pelicula ap ;
 
 /*la unica manera que he encontrado es negando la subconsulta positiva
  * la verdad es que la pista me la dio un compañero porque al principio me quede satisfecho con la siguiente consulta*/
-SELECT count(cp.id) as libres, p.titulo as titulo
+
+
+SELECT COUNT(cp.id) AS libres, p.titulo AS titulo
 FROM copia_pelicula cp
-inner JOIN pelicula p ON p.id = cp.id_pelicula
+INNER JOIN pelicula p ON p.id = cp.id_pelicula
 WHERE cp.id NOT IN (
     SELECT ap.id_copia_pelicula
     FROM alquilar_pelicula ap
     WHERE ap.fecha_devolucion IS NULL
 )
-group by p.titulo;
+GROUP BY p.titulo;
+
 
 
 
 /*ESTA ES LA CONSULTA ORIGINAL QUE PENSE QUE ERA LA BUENA
+y luego ya me dijeron que era un poco tricky y que tenía que dar solo 5 películas y ya me puse
+a dar vueltas, sinceramente sino me hubieran comentado que quedaban 5 resultados
+la habría dejado tal cual
  
 select count(cp.id) as numero_de_copias  ,p.titulo as titulo_libre from alquilar_pelicula ap 
 inner join copia_pelicula cp on cp.id=ap.id_copia_pelicula
